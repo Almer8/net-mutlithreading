@@ -12,6 +12,36 @@ namespace NetPract1
     {
         static List<List<int>> result = new List<List<int>>();
 
+
+        static List<int> mergeSortedLists(List<List<int>> multList)
+        {
+            List<int> result = new List<int>();
+            int[] indices = new int[multList.Count];
+
+            while (true)
+            {
+                int minValue = int.MaxValue;
+                int minIndex = -1;
+
+                for (int i = 0; i < multList.Count; i++)
+                {
+                    if (indices[i] < multList[i].Count && multList[i][indices[i]] < minValue)
+                    {
+                        minValue = multList[i][indices[i]];
+                        minIndex = i;
+                    }
+                }
+
+                if (minIndex == -1) break;
+
+                result.Add(minValue);
+
+                indices[minIndex]++;
+            }
+
+            return result;
+        }
+
         static List<List<int>> divideList(List<int> list, int n)
         {
             int baseSize = list.Count/n;
@@ -44,7 +74,6 @@ namespace NetPract1
         static void Main(string[] args)
         {
             Stopwatch stopWatch = new Stopwatch();
-            Stopwatch multiStopWatch = new Stopwatch();
 
             Console.WriteLine("Please input number of elements to sort:");
             int arrLen = Convert.ToInt32(Console.ReadLine());
@@ -79,7 +108,8 @@ namespace NetPract1
                        ts.Hours, ts.Minutes, ts.Seconds,
                        ts.Milliseconds / 10);
             Console.WriteLine("RunTime " + elapsedTime);
-
+            Console.WriteLine("RunTime " + stopWatch.ElapsedMilliseconds + "ms");
+            Stopwatch multiStopWatch = new Stopwatch();
             List<Thread> threads = new List<Thread>();
             object lockObject = new object();
             multiStopWatch.Start();
@@ -88,7 +118,7 @@ namespace NetPract1
             {
                 int index = i;
                 Thread thread = new Thread(()=> {
-                    List<int> sortedPart = sort(list);
+                    List<int> sortedPart = sort(dividedList[index]);
                     lock (lockObject)
                     {
                         result.Add(sortedPart);
@@ -101,14 +131,14 @@ namespace NetPract1
             {
                 threads[i].Join();
             }
-            List<List<int>> multSortedLists = result.OrderBy(x=>x.First()).ToList();
-            List<int> finalList = multSortedLists.SelectMany(x => x).ToList();
+            List<int> finalList = mergeSortedLists(result);
             multiStopWatch.Stop();
             TimeSpan multiTs = multiStopWatch.Elapsed;
             string multiElapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
                        multiTs.Hours, multiTs.Minutes, multiTs.Seconds,
                        multiTs.Milliseconds / 10);
             Console.WriteLine("Multithread RunTime " + multiElapsedTime);
+            Console.WriteLine("Multithread RunTime " + multiStopWatch.ElapsedMilliseconds + "ms");
         }
     }
 }
